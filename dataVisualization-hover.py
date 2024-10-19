@@ -25,6 +25,28 @@ st.write(data.head())
 # Add a combined column of date and time for easier display
 data['Date_Time'] = data['LogDate'] + ' | ' + data['MS'].astype(str) + ' ms'
 
+# Display summary statistics on Streamlit and console
+st.write(f"### {activity} Summary Statistics")
+summary_stats = data.describe()
+st.write(summary_stats)
+print(f"\nSummary Statistics for {activity}:")
+print(summary_stats)
+
+# Outlier detection using Interquartile Range (IQR) method
+numeric_data = data.select_dtypes(include=['float64', 'int64'])
+Q1 = numeric_data.quantile(0.25)
+Q3 = numeric_data.quantile(0.75)
+IQR = Q3 - Q1
+
+# Detect outliers: data points outside 1.5 * IQR are considered outliers
+outliers = ((numeric_data < (Q1 - 1.5 * IQR)) | (numeric_data > (Q3 + 1.5 * IQR))).sum()
+
+# Display outliers on Streamlit and console
+st.write(f"### {activity} Outliers Detected")
+st.write(outliers)
+print(f"\nOutliers detected in {activity}:")
+print(outliers)
+
 # Plot individual graphs with Plotly
 st.write(f"### {activity}: Interactive Acceleration Data Over Time")
 
@@ -65,3 +87,16 @@ fig_gyro_z = px.line(data, x='MS', y='Gyro Z (°/s)', title='Gyro Z (°/s) over 
                      hover_data={'LogDate': True, 'MS': True, 'Gyro Z (°/s)': True}, 
                      labels={'MS': 'Time (ms)', 'Gyro Z (°/s)': 'Gyro Z (°/s)'})
 st.plotly_chart(fig_gyro_z)
+
+# Visualizing Outliers using Boxplots
+st.write(f"### {activity}: Detecting Outliers using Boxplots")
+
+# Boxplot for Acceleration Data
+fig_accel_box = px.box(data, y=['Accel X (m/s²)', 'Accel Y (m/s²)', 'Accel Z (m/s²)'],
+                       title='Acceleration Outliers (X, Y, Z)')
+st.plotly_chart(fig_accel_box)
+
+# Boxplot for Gyroscope Data
+fig_gyro_box = px.box(data, y=['Gyro X (°/s)', 'Gyro Y (°/s)', 'Gyro Z (°/s)'],
+                      title='Gyroscope Outliers (X, Y, Z)')
+st.plotly_chart(fig_gyro_box)
